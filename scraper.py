@@ -30,6 +30,6 @@ class CharitiesSpider(scrapy.Spider):
 			data['last_update'] = datetime.strptime(last_update_text, '%d/%m/%Y').date()
 			scraperwiki.sqlite.save(unique_keys=['uid'], data=data)
 
-process = CrawlerProcess()
+process = CrawlerProcess({'LOG_LEVEL': 'INFO'})
 process.crawl(CharitiesSpider)
 process.start()
