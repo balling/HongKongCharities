@@ -1,4 +1,4 @@
-#import scraperwiki
+import scraperwiki
 import scrapy
 from datetime import datetime
 from scrapy.crawler import CrawlerProcess
@@ -11,11 +11,16 @@ def text(l):
 def cell(table, row, column):
 	return text(table.xpath('tr[{}]/td[{}]/text()'.format(row, column)).extract())
 
+def subsidary(table, i, uid):
+	return {
+		'sid': '{}_{}'.format(uid, i),
+		'name_en': cell(table, i, 2),
+		'name_ch': cell(table, i, 3),
+		'charity_id': uid
+	}
+
 class CharitiesSpider(scrapy.Spider):
 	name = "hkcharities"
-	custom_settings = {
-        'DOWNLOAD_DELAY': 0.25,
-    }
 	def start_requests(self):
 		for i in range(1, 16000):
 			uid = '91/{:05d}'.format(i)
@@ -36,9 +41,11 @@ class CharitiesSpider(scrapy.Spider):
 			data['uid'] = uid
 			last_update_text = response.xpath('//p[@align="right"]/text()').extract()[0].split(' ')[-1]
 			data['last_update'] = datetime.strptime(last_update_text, '%d/%m/%Y').date()
-			print(data)
-			# scraperwiki.sqlite.save(unique_keys=['uid'], data=data)
+			scraperwiki.sqlite.save(unique_keys=['uid'], data=data)
+		if(len(tables)>1):
+			subsidaries = [subsidary(tables[1], i, uid) for i in range(1, len(tables[1].css('tr')) + 1)]
+			scraperwiki.sqlite.save(unique_keys=['sid'], data=subsidaries, table_name='subsidaries')
 
-process = CrawlerProcess({'LOG_LEVEL': 'INFO'})
+process = CrawlerProcess({'DOWNLOAD_DELAY': 0.1,'LOG_LEVEL': 'INFO'})
 process.crawl(CharitiesSpider)
 process.start()
