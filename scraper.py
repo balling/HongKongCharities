@@ -1,9 +1,16 @@
+
+import os
+# kudos to https://github.com/otherchirps/nsw_gov_docs/blob/master/scraper.py
+# morph.io requires this db filename, but scraperwiki doesn't nicely
+# expose a way to alter this. So we'll fiddle our environment ourselves
+# before our pipeline modules load.
+os.environ['SCRAPERWIKI_DATABASE_NAME'] = 'sqlite:///data.sqlite'
+
 import scraperwiki
 import scrapy
 from datetime import datetime
 from scrapy.crawler import CrawlerProcess
 from scrapy.http import FormRequest
-from functools import partial
 
 def text(l):
     return l[0].strip() if len(l) > 0 else ''
@@ -26,13 +33,16 @@ class CharitiesSpider(scrapy.Spider):
         scraperwiki.sql.execute('DROP TABLE IF EXISTS subsidaries')
         for i in range(1, 16000):
             uid = '91/{:05d}'.format(i)
-            yield FormRequest('https://www.ird.gov.hk/charity/view_detail.php', formdata={'org_id':uid}, callback=partial(self.parse_page, uid=uid))
+            request = FormRequest('https://www.ird.gov.hk/charity/view_detail.php', formdata={'org_id':uid}, callback=self.parse_page)
+            request.meta['uid'] = uid
+            yield request
 
-    def parse_page(self, response, uid):
+    def parse_page(self, response):
         tables = response.css('table')
         if(len(tables) == 0):
             return
         table = tables[0]
+        uid = response.meta['uid']
         data = {}
         data['name_en'] = cell(table, 1, 2)
         data['name_ch'] = cell(table, 2, 2)
