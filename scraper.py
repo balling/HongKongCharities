@@ -58,6 +58,6 @@ class CharitiesSpider(scrapy.Spider):
             subsidaries = [subsidary(tables[1], i, uid) for i in range(1, len(tables[1].css('tr')))]
             scraperwiki.sqlite.save(unique_keys=['sid'], data=subsidaries, table_name='subsidaries')
 
-process = CrawlerProcess({'DOWNLOAD_DELAY': 0.1,'LOG_LEVEL': 'INFO'})
+process = CrawlerProcess({'DOWNLOAD_DELAY': 0.2,'LOG_LEVEL': 'INFO'})
 process.crawl(CharitiesSpider)
 process.start()
