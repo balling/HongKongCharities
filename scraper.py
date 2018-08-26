@@ -53,7 +53,7 @@ class CharitiesSpider(scrapy.Spider):
             data['uid'] = uid
             last_update_text = response.xpath('//p[@align="right"]/text()').extract()[0].split(' ')[-1]
             data['last_update'] = datetime.strptime(last_update_text, '%d/%m/%Y').date()
-            scraperwiki.sqlite.save(unique_keys=['uid'], data=data)
+            scraperwiki.sqlite.save(unique_keys=['uid'], data=data, table_name='data')
         if(len(tables)>1):
             subsidaries = [subsidary(tables[1], i, uid) for i in range(1, len(tables[1].css('tr')))]
             scraperwiki.sqlite.save(unique_keys=['sid'], data=subsidaries, table_name='subsidaries')
